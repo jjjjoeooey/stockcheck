@@ -1,0 +1,18 @@
+把这个文件夹里的「所有内容」（不是 _upload 文件夹本身）拖到 GitHub 仓库。
+
+仓库根目录应该能直接看到：
+  render.yaml
+  requirements.txt
+  stockcheck/
+  web/
+  scripts/
+
+不要上传：
+  data/platform.db
+  data/uploads/
+  hud/hud_config.json
+  pet/pet_config.json
+  research/prices.pkl
+  shots/
+  tests/
+  __pycache__/

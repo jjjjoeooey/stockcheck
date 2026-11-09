@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="/icon-192.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0a101c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="StockCheck">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<title>StockCheck · 七维体检台</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">SC</div>
+    <div>
+      <h1>StockCheck <span>七维体检台</span></h1>
+      <p class="sub">换手 · 量能 · KDJ金叉 · 相对位置 · 新布林极限 · 相对压力位 · 基本面</p>
+    </div>
+  </div>
+  <div class="quick">
+    <input id="quickInput" type="search" placeholder="代码 / 名称，回车分析">
+  </div>
+  <div class="top-actions">
+    <div class="stat"><b id="statCount">0</b><span>只股票</span></div>
+    <div class="stat"><b id="statFund">0</b><span>份基本面</span></div>
+    <button class="btn ghost" id="btnExport">导出 CSV</button>
+    <button class="btn ghost" id="btnDemo">生成演示</button>
+    <button class="btn danger-ghost" id="btnClear">清空</button>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-tab="rank">排行榜</button>
+  <button class="tab" data-tab="market">全市场</button>
+  <button class="tab" data-tab="sector">板块扫描</button>
+  <button class="tab" data-tab="upload">数据上传</button>
+  <button class="tab" data-tab="weights">权重设置</button>
+</nav>
+
+<main>
+  <section id="tab-rank" class="tab-panel active">
+    <div class="toolbar">
+      <input id="search" type="search" placeholder="搜索代码 / 名称…">
+      <label class="filter">最低总分
+        <input id="minScore" type="number" value="0" min="0" max="100" step="5">
+      </label>
+      <label class="filter">排序
+        <select id="sortBy">
+          <option value="total">总分</option>
+          <option value="turnover">换手</option>
+          <option value="kdj">KDJ</option>
+          <option value="relpos">相对位置</option>
+          <option value="boll_extreme">新布林极限</option>
+          <option value="resistance">相对压力位</option>
+          <option value="fundamental">基本面</option>
+        </select>
+      </label>
+      <span class="hint" id="rankHint"></span>
+    </div>
+
+    <div id="emptyState" class="empty" hidden>
+      <div class="empty-icon">📊</div>
+      <h2>还没有数据</h2>
+      <p>先点「生成演示」看看效果，或者到「数据上传」导入指南针导出的日线文件。</p>
+      <div class="empty-actions">
+        <button class="btn primary" id="btnDemo2">生成演示数据</button>
+        <button class="btn ghost" data-goto="upload">去上传</button>
+      </div>
+    </div>
+
+    <div class="table-wrap" id="tableWrap" hidden>
+      <table id="rankTable">
+        <thead>
+          <tr>
+            <th class="num">#</th><th>代码</th><th>名称</th>
+            <th class="num sortable" data-key="total">总分</th>
+            <th class="num sortable" data-key="turnover">换手</th>
+            <th class="num sortable" data-key="volume">量能</th>
+            <th class="num sortable" data-key="kdj">KDJ</th>
+            <th class="num sortable" data-key="relpos">位置</th>
+            <th class="num sortable" data-key="boll_extreme">布林</th>
+            <th class="num sortable" data-key="resistance">压力</th>
+            <th class="num sortable" data-key="fundamental">基本面</th>
+            <th>标签</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+
+  <section id="tab-market" class="tab-panel">
+    <div class="toolbar">
+      <input id="mktSearch" type="search" placeholder="搜索代码 / 名称…">
+      <label class="filter">快照分 ≥
+        <input id="mktMin" type="number" value="60" min="0" max="100" step="5">
+      </label>
+      <label class="filter">深度扫描
+        <input id="mktTop" type="number" value="30" min="1" max="200" step="10">
+        <span class="muted">只</span>
+      </label>
+      <button class="btn primary" id="btnDeepen">深度扫描</button>
+      <button class="btn ghost" id="btnMktRefresh">刷新</button>
+      <label class="filter"><input id="autoRefresh" type="checkbox"> 每30秒自动刷新</label>
+      <span class="hint" id="mktTime">—</span>
+    </div>
+    <p class="muted small" style="margin:-6px 0 12px">快照分只用换手/量比/涨跌/PE/PB 粗筛，用来决定先深度扫描谁；点「深度扫描」后才会算七维总分。列表最多显示 300 条。</p>
+    <div class="table-wrap">
+      <table id="mktTable">
+        <thead><tr>
+          <th>代码</th><th>名称</th><th class="num">现价</th><th class="num">涨幅</th>
+          <th class="num">换手</th><th class="num">量比</th><th class="num">PE</th><th class="num">PB</th>
+          <th class="num">市值(亿)</th><th class="num">快照分</th><th>状态</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+
+  <section id="tab-sector" class="tab-panel">
+    <div class="toolbar">
+      <select id="boardType">
+        <option value="industry">行业板块</option>
+        <option value="concept">概念板块</option>
+        <option value="region">地域板块</option>
+      </select>
+      <select id="boardSelect" class="board-select"></select>
+      <button class="btn ghost" id="btnBoardRefresh">刷新</button>
+      <span class="hint" id="boardInfo">—</span>
+    </div>
+
+    <div class="card filter-card">
+      <div class="filters">
+        <label>价格 <input id="fPriceMin" type="number" placeholder="最低"> ~ <input id="fPriceMax" type="number" placeholder="最高"></label>
+        <label>市值 <input id="fCapMin" type="number" placeholder="亿"> ~ <input id="fCapMax" type="number" placeholder="亿"></label>
+        <label>成交额≥ <input id="fAmountMin" type="number" placeholder="亿"></label>
+        <label class="chk"><input type="checkbox" id="fNoST" checked> 排除 ST</label>
+        <label class="chk"><input type="checkbox" id="fNoLoss" checked> 排除亏损</label>
+        <label>扫描 <input id="fTopN" type="number" value="20" min="1" max="200"> 只</label>
+        <button class="btn primary" id="btnBoardScan">筛选 + 深度扫描</button>
+        <button class="btn ghost" id="btnBoardReset">重置</button>
+      </div>
+      <p class="muted small" style="margin:10px 0 0">换手、涨幅、PE 已计入七维打分，不再作为过滤条件，避免重复计算；这里只保留中性条件。</p>
+    </div>
+
+    <div class="table-wrap">
+      <table id="boardTable">
+        <thead><tr>
+          <th>代码</th><th>名称</th><th class="num">现价</th><th class="num">涨幅</th>
+          <th class="num">换手</th><th class="num">量比</th><th class="num">PE</th>
+          <th class="num">市值(亿)</th><th class="num">快照分</th><th class="num">六维</th><th>状态</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="tab-upload" class="tab-panel">
+    <div class="upload-grid">
+      <div class="card">
+        <h2>① 日线数据</h2>
+        <p class="muted">指南针导出的 CSV / Excel。文件名带 6 位代码即可，例如 <code>600519.csv</code>。<br>
+        至少需要：日期、开盘、最高、最低、收盘、成交量（换手率可选）。</p>
+        <label class="drop" id="dropPrice">
+          <input type="file" id="filePrice" multiple accept=".csv,.txt,.xls,.xlsx">
+          <span class="drop-icon">⬆</span>
+          <b>拖拽文件到这里，或点击选择</b>
+          <small>可多选，一次导入多只</small>
+        </label>
+        <div class="log" id="logPrice"></div>
+      </div>
+      <div class="card">
+        <h2>② 基本面（可选）</h2>
+        <p class="muted">列名：代码、名称、市盈率、市净率、净资产收益率、净利润增长率、营收增长率、资产负债率。<br>
+        上传后会自动匹配已入库股票并重算总分。</p>
+        <label class="drop small" id="dropFund">
+          <input type="file" id="fileFund" accept=".csv,.txt,.xls,.xlsx">
+          <span class="drop-icon">⬆</span>
+          <b>拖拽基本面表，或点击选择</b>
+        </label>
+        <div class="log" id="logFund"></div>
+      </div>
+    </div>
+    <div class="card sync-card">
+      <h2>③ 联网同步真实行情 <span class="tag">推荐</span></h2>
+      <p class="muted">直接输入股票代码，从东方财富拉取<strong>前复权</strong>日线（约 600 根）与 PE/PB，不需要导出任何文件。</p>
+      <div class="sync-row">
+        <input id="syncCodes" type="text" placeholder="600519, 300750, 000001（逗号或空格分隔，一次最多 50 只）">
+        <button class="btn primary" id="btnSync">同步行情</button>
+      </div>
+      <div class="log" id="logSync"></div>
+    </div>
+    <div class="card paste-card">
+      <h2>④ 直接粘贴（找不到导出时用）</h2>
+      <p class="muted">在指南针 K 线界面 <code>Ctrl+A</code> 全选、<code>Ctrl+C</code> 复制，直接粘到下面。第一行请带上列名（日期 开盘 最高 最低 收盘 成交量 换手率）。</p>
+      <div class="sync-row">
+        <input id="pasteCode" type="text" placeholder="股票代码，如 600519" style="max-width:220px">
+        <button class="btn primary" id="btnPaste">解析并入库</button>
+      </div>
+      <textarea id="pasteText" rows="6" placeholder="在此粘贴…"></textarea>
+      <div class="log" id="logPaste"></div>
+    </div>
+    <div class="card tips">
+      <h2>字段兼容说明</h2>
+      <ul>
+        <li>列名支持中文/英文：<code>日期 / 交易日期 / date</code>、<code>开盘 / 开盘价 / open</code>、<code>换手率 / 换手 / turnover</code>。</li>
+        <li>数字支持 <code>1,234.5</code>、<code>3.2%</code>、<code>2.5万</code>、<code>1.2亿</code> 等写法。</li>
+        <li>请使用<strong>前复权</strong>数据，否则除权缺口会造成相对位置/布林失真。</li>
+        <li>数据不足 60 根日线会被拒绝；不足 120 根会给出提示。</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="tab-weights" class="tab-panel">
+    <div class="card weights-card">
+      <h2>七维权重</h2>
+      <p class="muted">技术面合计建议 70~85，基本面 15~30。改完点「应用并重算」，全部股票立即重新打分。</p>
+      <div id="weightSliders" class="sliders"></div>
+      <div class="weight-foot">
+        <div>权重合计：<b id="weightSum">100</b></div>
+        <div class="presets">
+          <button class="btn ghost small" data-preset="default">默认</button>
+          <button class="btn ghost small" data-preset="tech">技术优先</button>
+          <button class="btn ghost small" data-preset="fund">基本面优先</button>
+          <button class="btn ghost small" data-preset="trend">趋势优先</button>
+        </div>
+        <button class="btn primary" id="btnApplyWeights">应用并重算</button>
+      </div>
+      <p class="muted small">说明：各维度先各自打 0~100，再按权重加权平均；权重会被归一化，因此不必凑满 100。</p>
+    </div>
+  </section>
+</main>
+
+<div class="backdrop" id="backdrop" hidden></div>
+<aside class="drawer" id="drawer" hidden>
+  <div class="drawer-head">
+    <div>
+      <h2 id="dTitle">—</h2>
+      <p class="muted" id="dSub">—</p>
+    </div>
+    <div class="drawer-actions">
+      <button class="btn ghost small" id="btnDelete">删除</button>
+      <button class="btn ghost small" id="btnCloseDrawer">关闭</button>
+    </div>
+  </div>
+  <div class="drawer-body" id="dBody"></div>
+</aside>
+
+<div class="toast" id="toast" hidden></div>
+<div class="install-hint" id="installHint" hidden>
+  <span>📲 想当 App 用？点 <b>分享</b> → <b>添加到主屏幕</b></span>
+  <button id="closeHint" aria-label="关闭">×</button>
+</div>
+<script src="/app.js"></script>
+</body>
+</html>
